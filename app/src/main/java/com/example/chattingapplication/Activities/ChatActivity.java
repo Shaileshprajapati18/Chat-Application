@@ -46,8 +46,6 @@ public class ChatActivity extends AppCompatActivity {
     ArrayList<Message> messages;
     String senderRoom, receiverRoom;
     DatabaseReference databaseReference;
-    ArrayList<User> users;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -3,9 +3,6 @@ package com.example.chattingapplication.Fragment;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.chattingapplication.Adapter.UsersAdapter;
 import com.example.chattingapplication.Model.Base64ToImageConverter;
 import com.example.chattingapplication.Model.User;
-import com.example.chattingapplication.Model.UserDatabase;
 import com.example.chattingapplication.Model.UserRepository;
 import com.example.chattingapplication.R;
 import com.facebook.shimmer.ShimmerFrameLayout;
@@ -60,11 +56,14 @@ public class ChatsFragment extends Fragment {
         searchView = view.findViewById(R.id.searchView);
         searchView.setVisibility(GONE);
 
+        userRecycler = view.findViewById(R.id.user_recycler);
+        userRecycler.setVisibility(GONE);
+        shimmerChat.setVisibility(GONE);
+
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
 
-        userRecycler = view.findViewById(R.id.user_recycler);
         userRecycler.setHasFixedSize(true);
         userRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -82,17 +81,22 @@ public class ChatsFragment extends Fragment {
     }
 
     private void loadUsersFromRoom() {
+
         shimmerChat.setVisibility(VISIBLE);
 
         userRepository.getAllUsers().observe(getViewLifecycleOwner(), new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 if (users != null && !users.isEmpty()) {
+
                     usersList.clear();
                     usersList.addAll(users);
                     usersAdapter.notifyDataSetChanged();
-                    shimmerChat.setVisibility(GONE);
+
                     userRecycler.setVisibility(VISIBLE);
+                    shimmerChat.setVisibility(GONE);
+
+
                     Log.d("ChatFragment", "Users loaded from Room: " + users.size());
                 } else {
                     shimmerChat.setVisibility(GONE);
@@ -110,18 +114,20 @@ public class ChatsFragment extends Fragment {
                 if (snapshot.exists()) {
                     usersList.clear();
                     List<User> newUsers = new ArrayList<>();
-
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
 
                         User user = dataSnapshot.getValue(User.class);
                         if (user != null) {
                             String imageFilePath = null;
-                            if (user.getProfileImage() != null) {
+                            if (user.getProfileImage() != null && getContext() != null) {
                                 File imageFile = Base64ToImageConverter.convertBase64ToImage(
                                         getContext(), user.getProfileImage(), "profile_" + user.getUid() + ".jpg");
 
                                 if (imageFile != null && imageFile.exists()) {
                                     imageFilePath = imageFile.getAbsolutePath();
+
+                                    userRepository.updateUserImage(user.getUid(), imageFilePath);
+
                                     Log.d("myimage", "Image saved at: " + imageFilePath);
                                 } else {
                                     Log.e("myimage", "Failed to save image");
@@ -135,7 +141,7 @@ public class ChatsFragment extends Fragment {
                     }
 
                     usersAdapter.notifyDataSetChanged();
-                    userRepository.insertUsers(newUsers);
+                    userRepository.updateUsers(newUsers);
 
                     shimmerChat.setVisibility(GONE);
                     userRecycler.setVisibility(VISIBLE);

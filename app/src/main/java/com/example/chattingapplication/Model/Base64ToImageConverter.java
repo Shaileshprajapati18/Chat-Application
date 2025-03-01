@@ -12,12 +12,13 @@ import java.io.IOException;
 
 public class Base64ToImageConverter {
     public static File convertBase64ToImage(Context context, String base64String, String fileName) {
-        try {
-            if (base64String == null || base64String.isEmpty()) {
-                Log.e("Base64ToImage", "Base64 string is empty or null");
-                return null; // Return null if Base64 is invalid
-            }
+        // Return null early if the base64 string is invalid
+        if (base64String == null || base64String.isEmpty()) {
+            Log.e("Base64ToImage", "Base64 string is empty or null");
+            return null;
+        }
 
+        try {
             // Decode Base64 string to byte array
             byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
             if (decodedBytes.length == 0) {
@@ -25,6 +26,7 @@ public class Base64ToImageConverter {
                 return null;
             }
 
+            // Convert byte array to bitmap
             Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
             if (bitmap == null) {
                 Log.e("Base64ToImage", "Failed to decode Base64 to bitmap");
@@ -38,6 +40,9 @@ public class Base64ToImageConverter {
             fos.flush();
             fos.close();
 
+            // Recycle the bitmap to free up memory
+            bitmap.recycle();
+
             if (!success) {
                 Log.e("Base64ToImage", "Failed to compress and save bitmap");
                 return null;
@@ -47,8 +52,8 @@ public class Base64ToImageConverter {
             return imageFile;
 
         } catch (IOException | IllegalArgumentException e) {
-            e.printStackTrace();
             Log.e("Base64ToImage", "Error: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

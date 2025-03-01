@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/main_color"
     tools:context=".Activities.splash_screen">
 
         <ImageView
             android:id="@+id/gifImageView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/quicktalk_splash"
-            android:src="@drawable/quicktalk_splash" />
-
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_centerInParent="true"
+            app:tint="@color/white"
+            android:src="@drawable/chats" />
 
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-80dp"
-        android:layout_gravity="center"
+        android:layout_alignParentBottom="true"
+        android:paddingBottom="40dp"
+        android:layout_centerInParent="true"
         android:indeterminateTint="@color/white" />
     />
-</LinearLayout>
+</RelativeLayout>

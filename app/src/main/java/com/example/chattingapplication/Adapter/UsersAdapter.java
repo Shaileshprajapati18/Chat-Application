@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.chattingapplication.Activities.ChatActivity;
 import com.example.chattingapplication.Model.User;
 import com.example.chattingapplication.R;
@@ -50,38 +51,34 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHold
         User user = users.get(position);
         holder.textView.setText(user.getName());
 
-        String profileImage = user.getProfileImage();
+        // Load image properly from file storage
+        loadImage(user.getProfileImage(), holder.circleImageView);
 
-        if (profileImage != null && !profileImage.isEmpty()) {
-            try {
-                byte[] imageBytes = Base64.decode(profileImage, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                Glide.with(context).load(bitmap).into(holder.circleImageView);
-            } catch (Exception e) {
-                Log.e("UsersAdapter", "Error decoding base64 image", e);
-                holder.circleImageView.setImageResource(R.drawable.avatar);
-            }
-        } else {
-            holder.circleImageView.setImageResource(R.drawable.avatar);
-        }
+        holder.itemView.setOnClickListener(view -> {
+            // Use the main thread for UI-related actions
+            new Handler(Looper.getMainLooper()).post(() -> handleItemClick(user, holder));
+        });
+    }
 
-        String imagePath = user.getProfileImage();
+    private void loadImage(String imagePath, CircleImageView imageView) {
         if (imagePath != null && !imagePath.isEmpty()) {
             File imageFile = new File(imagePath);
             if (imageFile.exists()) {
                 Glide.with(context)
                         .load(imageFile)
                         .placeholder(R.drawable.avatar)
-                        .into(holder.circleImageView);
+                        .skipMemoryCache(true) // Forces Glide to reload image
+                        .diskCacheStrategy(DiskCacheStrategy.NONE) // Prevents old cache usage
+                        .into(imageView);
             } else {
-                holder.circleImageView.setImageResource(R.drawable.ic_launcher_background);
+                imageView.setImageResource(R.drawable.avatar);
             }
+        } else {
+            imageView.setImageResource(R.drawable.avatar);
         }
-
-        holder.itemView.setOnClickListener(view -> new Thread(() -> handleItemClick(user)).start());
     }
 
-    private void handleItemClick(User user) {
+    private void handleItemClick(User user, UserViewHolder holder) {
         try {
             String base64Image = user.getProfileImage();
             Bitmap bitmap = null;
@@ -96,38 +93,48 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHold
                 imagePath = saveImageToCache(bitmap);
             }
 
-            String finalImagePath = imagePath;
+            // Only use the cached image or original path if the cache saving fails
+            String finalImagePath = imagePath != null ? imagePath : user.getProfileImage();
 
-            new Handler(Looper.getMainLooper()).post(() -> {
-                Intent intent = new Intent(context, ChatActivity.class);
-                intent.putExtra("uid", user.getUid());
-                intent.putExtra("name", user.getName());
-                intent.putExtra("profileImage", finalImagePath != null ? finalImagePath : user.getProfileImage());
+            // Use Intent to send data to ChatActivity
+            Intent intent = new Intent(context, ChatActivity.class);
+            intent.putExtra("uid", user.getUid());
+            intent.putExtra("name", user.getName());
+            intent.putExtra("profileImage", finalImagePath); // Pass the final image path
 
-                context.startActivity(intent);
-            });
+            context.startActivity(intent);
+
+            // Notify UI if any changes (if needed)
+            int index = users.indexOf(user);
+            if (index != -1) {
+                notifyItemChanged(index);
+            }
         } catch (Exception e) {
             Log.e("UsersAdapter", "Error handling item click", e);
         }
     }
 
-
     private String saveImageToCache(Bitmap bitmap) {
-        try {
+        if (context != null) {
+            try {
+                File cacheDir = context.getCacheDir();
+                File file = new File(cacheDir, "profile_image.png");
 
-            File cacheDir = context.getCacheDir();
-            File file = new File(cacheDir, "profile_image.png");
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                }
 
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                return file.getAbsolutePath();
+            } catch (IOException e) {
+                Log.e("UsersAdapter", "Error saving image to cache", e);
+                return null;
             }
-
-            return file.getAbsolutePath();
-        } catch (IOException e) {
-            Log.e("UsersAdapter", "Error saving image to cache", e);
+        } else {
+            Log.e("UsersAdapter", "Context is null, cannot save image to cache");
             return null;
         }
     }
+
 
     @Override
     public int getItemCount() {

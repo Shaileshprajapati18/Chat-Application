@@ -67,6 +67,7 @@ public class StatusFragment extends Fragment {
         Toolbar toolbar=view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
+        toolbar.setTitle("Status");
 
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setTitle("Uploading...");

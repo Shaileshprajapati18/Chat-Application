@@ -1,6 +1,7 @@
 package com.example.chattingapplication.Model;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -12,6 +13,8 @@ public class User {
     private String uid;
     private String name;
     private String phoneNumber;
+
+    @ColumnInfo(name = "profile_image")
     private String profileImage;
 
     public User() {

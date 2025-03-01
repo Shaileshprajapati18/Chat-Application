@@ -23,9 +23,6 @@ public class splash_screen extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash_screen);
 
-        ImageView gifView = findViewById(R.id.gifImageView);
-        Glide.with(this).load(R.drawable.quicktalk_splash).into(gifView);
-
         Handler handler=new Handler();
 
         handler.postDelayed(new Runnable() {

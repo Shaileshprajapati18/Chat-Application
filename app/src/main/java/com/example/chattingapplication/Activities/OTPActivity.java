@@ -72,6 +72,7 @@ public class OTPActivity extends AppCompatActivity {
 
                     @Override
                     public void onVerificationFailed(@NonNull FirebaseException e) {
+                        progressDialog.dismiss();
                         Toast.makeText(OTPActivity.this, "Verification Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
 

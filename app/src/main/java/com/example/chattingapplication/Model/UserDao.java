@@ -15,4 +15,10 @@ public interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertUsers(List<User> users);
+
+    @Query("DELETE FROM users")
+    void deleteAllUsers();
+
+    @Query("UPDATE users SET profile_image = :imagePath WHERE uid = :uid")
+    void updateUserImage(String uid, String imagePath);
 }
